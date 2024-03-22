@@ -1,0 +1,122 @@
+// 100 Days of RTL
+
+// Abilash P
+
+// Digital Stop Watch
+
+
+module digital_stop_watch(
+    input clk, rst, start, stop, clear, lap,
+    output reg start_status, lap_status,
+    output reg stop_status, clear_status,
+    output reg reset_status, idle_status,
+    output reg [3:0] count_val, lap_val);
+  
+  parameter RESET_STATE = 3'b000;
+  parameter IDLE_STATE  = 3'b001;
+  parameter RUN_STATE   = 3'b010;
+  parameter LAP_STATE   = 3'b011;
+  parameter STOP_STATE  = 3'b100;
+  parameter CLEAR_STATE = 3'b101;
+  
+  reg [3:0] state, next_state;
+
+  initial begin
+    count_val <= 0;
+    lap_val   <= 0;
+    state     <= RESET_STATE;
+  end
+  
+  always @(posedge clk or posedge rst)
+    begin
+      if (rst)
+        begin
+          state <= RESET_STATE;
+          reset_status <= 1;
+          idle_status <= 0;
+          start_status <= 0;
+          lap_status <= 0;
+          stop_status <= 0;
+          clear_status <= 0;
+          count_val <= 0;
+          lap_val <= 0;
+        end
+      else 
+        begin
+          state <= next_state;
+          reset_status <= 0;
+          idle_status <= (state == IDLE_STATE);
+          start_status <= (state == RUN_STATE);
+          lap_status <= (state == LAP_STATE);
+          stop_status <= (state == STOP_STATE);
+          clear_status <= (state == CLEAR_STATE);
+        end
+    end
+
+  always @(*)
+    begin
+      case(state)
+        RESET_STATE: begin
+          if(rst == 0)
+            next_state <= IDLE_STATE;
+          else
+            next_state <= RESET_STATE;
+        end
+        
+        IDLE_STATE: begin
+          if(start)
+            next_state <= RUN_STATE;
+          else
+            next_state <= IDLE_STATE;
+        end
+        
+        RUN_STATE: begin
+          if(start && ~stop)
+            next_state <= RUN_STATE;
+          else if(start && lap)
+            next_state <= LAP_STATE;
+          else if(stop)
+            next_state <= STOP_STATE;
+          else
+            next_state <= IDLE_STATE;
+        end
+        
+        LAP_STATE: begin
+          if(start && lap)
+            next_state <= LAP_STATE;
+          else if(start && ~lap)
+            next_state <= RUN_STATE;
+          else if(stop)
+            next_state <= STOP_STATE;
+          else
+            next_state <= IDLE_STATE;
+        end
+        
+        STOP_STATE: begin
+          if(clear)
+            next_state <= CLEAR_STATE;
+          else
+            next_state <= STOP_STATE;
+        end
+        
+        CLEAR_STATE: begin
+          if(clear)
+            next_state <= CLEAR_STATE;
+          else
+            next_state <= IDLE_STATE;
+        end
+      endcase
+    end
+  
+  always @(posedge clk)
+    begin
+      if(start && ~stop && state == RUN_STATE)
+        count_val <= count_val + 1;
+      else if(clear)
+        count_val <= 0;
+      
+      if(lap)
+        lap_val <= count_val;
+    end
+  
+endmodule
