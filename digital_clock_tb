@@ -1,0 +1,77 @@
+// 100 Days of RTL
+
+// Abilash P
+
+// Digital Stop Watch
+
+module tb_digital_stop_watch();
+
+  reg clk, rst, start, stop, clear, lap;
+  wire start_status, lap_status, stop_status, clear_status, reset_status, idle_status;
+  wire [3:0] count_val, lap_val;
+
+  digital_stop_watch DUT (
+    .clk(clk), 
+    .rst(rst), 
+    .start(start), 
+    .stop(stop), 
+    .clear(clear), 
+    .lap(lap), 
+    .count_val(count_val), 
+    .lap_val(lap_val), 
+    .reset_status(reset_status), 
+    .idle_status(idle_status), 
+    .start_status(start_status), 
+    .lap_status(lap_status), 
+    .stop_status(stop_status), 
+    .clear_status(clear_status)
+  );
+
+  initial 
+    begin
+      clk = 0;
+      forever #5 clk = ~clk;
+  end
+
+  initial begin
+    rst = 1;
+    start = 0;
+    stop = 0;
+    clear = 0;
+    lap = 0;
+    #10 
+    
+    rst = 0;
+    #20 
+    
+    start = 1;
+    #50 
+    
+    stop = 1;
+    #50 
+    
+    clear = 1;
+    #50 
+    
+    lap = 1;
+    clear=0;
+    stop =0;
+    #50 
+    
+    start = 1;
+    #50 
+    
+    lap = 0;
+    #50 
+    
+    $finish;
+  end
+
+  // Dumping waveform
+  initial begin
+    $dumpfile("tb_digital_stop_watch.vcd");
+    $dumpvars(0, tb_digital_stop_watch);
+    #10;
+  end
+
+endmodule
